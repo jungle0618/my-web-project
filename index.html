@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bridge</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        #status {
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .connected {
+            background: #cfc;
+        }
+
+        .disconnected {
+            background: #fcc;
+        }
+
+        #messageLog {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .sent {
+            background: #eef;
+        }
+
+        .received {
+            background: #fee;
+        }
+    </style>
+    <style>
+        #gameTable {
+            display: flex;
+            justify-content: space-between;
+            height: 800px;
+            padding: 10px;
+            gap: 10px;
+            background: #f0f0f0;
+        }
+
+        #leftHand,
+        #rightHand {
+            width: 120px;
+            background: #d9eaff;
+            border: 1px solid #aaa;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            position: relative;
+        }
+
+
+
+
+        #middle {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            border: 1px solid #aaa;
+            padding: 10px;
+        }
+
+        #upHand,
+        #downHand {
+            height: 150px;
+            background: #cde7bd;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #7aaf4c;
+        }
+
+        #playedCards {
+            flex: 1;
+            background: #f9f9f9;
+            border: 1px solid #999;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 四個位置的牌區 */
+        #leftCard,
+        #upCard,
+        #rightCard,
+        #downCard {
+            position: absolute;
+            width: 80px;
+            height: 110px;
+            background: #eee;
+            border: 1px solid #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #444;
+        }
+
+        
+        /* 卡片的基本樣式 */
+        .card.horizontal {
+            height: 150px;
+            margin-left: -25px;   /* 牌之間水平間距 */
+        }
+
+/* 左右玩家的牌，垂直排列並且旋轉90度 */
+        .card.vertical {
+            height: 150px;   /* 旋轉後寬高交換 */
+            transform: rotate(90deg);
+            margin-top: -70px;  /* 牌之間垂直間距 */
+        }
+
+        #leftCard {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #rightCard {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #upCard {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #downCard {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>P2P Web Client</h1>
+
+    <div id="status" class="disconnected">Status: Disconnected</div>
+
+    <div>
+        <button onclick="connect()">Connect</button>
+    </div>
+    <div id="gameInfo"></div>
+
+    <div id="gameTable">
+        <div id="leftHand" class="hand-zone">LEFT HAND
+            <!-- 這裡放多張卡片，JS用 left/top動態排放 -->
+        </div>
+
+        <div id="middle">
+            <div id="upHand" class="hand-zone">UP HAND</div>
+
+            <div id="playedCards" class="card-zone">
+                <div id="leftCard">LEFT</div>
+                <div id="upCard">UP</div>
+                <div id="rightCard">RIGHT</div>
+                <div id="downCard">DOWN</div>
+            </div>
+
+            <div id="downHand" class="hand-zone">DOWN HAND</div>
+        </div>
+
+        <div id="rightHand" class="hand-zone">RIGHT HAND</div>
+    </div>
+
+
+
+
+    <h2>叫牌</h2>
+    <div id="bidHistory" style="margin-top: 20px; font-family: monospace;"></div>
+
+    <div id="bidArea">
+        <div id="bidButtons">
+            <!-- 動態加入叫牌按鈕 -->
+        </div>
+        <button id="confirmBidBtn" disabled>確認叫牌</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.6.1/elliptic.min.js"></script>
+    <script>
+        const EC = elliptic.ec;
+    </script>
+    <script>//bid gui
+        const BidName = [
+            '1C', '1D', '1H', '1S', '1N',
+            '2C', '2D', '2H', '2S', '2N',
+            '3C', '3D', '3H', '3S', '3N',
+            '4C', '4D', '4H', '4S', '4N',
+            '5C', '5D', '5H', '5S', '5N',
+            '6C', '6D', '6H', '6S', '6N',
+            '7C', '7D', '7H', '7S', '7N',
+            'P', 'X', 'XX'
+        ];
+        let currentBid = null;
+
+        async function showBidUI(onBidConfirmed) {
+            const bidArea = document.getElementById('bidArea');
+            const bidButtonsDiv = document.getElementById('bidButtons');
+            const confirmBtn = document.getElementById('confirmBidBtn');
+
+            bidArea.style.display = 'block';
+            bidButtonsDiv.innerHTML = '';
+            confirmBtn.disabled = true;
+
+            BidName.forEach((bidStr, index) => {
+                const btn = document.createElement('button');
+                btn.textContent = bidStr;
+                btn.style.margin = '3px';
+                btn.onclick = () => {
+                    currentBid = index;
+                    confirmBtn.disabled = false;
+
+                    // 可選：高亮被選中的按鈕
+                    Array.from(bidButtonsDiv.children).forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                };
+                bidButtonsDiv.appendChild(btn);
+            });
+
+            confirmBtn.onclick = () => {
+                bidArea.style.display = 'none';
+                onBidConfirmed(currentBid); // 將叫牌送回 bid() 函數
+            };
+        }
+    </script>
+
+    <script>//card gui
+        function toImageName(num) {
+            let suit = Math.floor(num / 13);
+            let rank = num % 13
+            const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
+            const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace']
+            return ranks[rank] + '_of_' + suits[suit] + '.svg'
+        }
+        const IMAGE_FOLDER = './images/'
+        function loadCards(cards, onCardSelected, id) {
+            const container = document.getElementById(id);
+            container.innerHTML = ''; // 清空舊圖片
+
+            cards.forEach(cardNum => {
+                const cardName = toImageName(cardNum); // 如 "jack_of_clubs.svg"
+                const img = document.createElement('img');
+                img.src = IMAGE_FOLDER + cardName;
+                img.alt = cardName;
+                img.style.cursor = 'pointer';
+                if (id == 'leftHand' || id == 'rightHand' || id == 'leftCard' || id == 'rightCard')
+                    img.classList.add('card', 'vertical');
+                else
+                    img.classList.add('card', 'horizontal');
+
+                img.onclick = () => {
+                    if (typeof onCardSelected === 'function') {
+                        onCardSelected(cardNum);
+                    }
+                };
+
+                img.onerror = () => {
+                    img.remove();
+                    const err = document.createElement('div');
+                    err.textContent = `無法載入圖片：${cardName}`;
+                    err.style.color = 'red';
+                    container.appendChild(err);
+                };
+
+                container.appendChild(img);
+            });
+
+        }
+
+
+
+    </script>
+
+
+    <script type="module">
+
+
+
+        import { P2PInterface } from './client.js';
+        import { Bridge } from './games/bridge.js';
+        let p2pInterface;
+
+        // 初始化连接
+        async function connect() {
+            const serverUrl = 'wss://140.112.30.186:8765';
+            p2pInterface = new P2PInterface(4, true, serverUrl);
+
+            // 加入狀態監聽器（在 init 前設定 onopen/onclose 是安全的）
+            p2pInterface.worker.socket.onopen = () => {
+                document.getElementById('status').className = 'connected';
+                document.getElementById('status').innerHTML =
+                    `Status: Connected | User ID: ${p2pInterface.userId}`;
+            };
+
+            p2pInterface.worker.socket.onclose = () => {
+                document.getElementById('status').className = 'disconnected';
+                document.getElementById('status').textContent = 'Status: Disconnected';
+            };
+
+            // 等待 P2P 初始化完成（重要）
+            try {
+                await p2pInterface.init();
+
+            } catch (err) {
+                console.error("Failed to initialize P2P:", err);
+                document.getElementById('status').className = 'disconnected';
+                document.getElementById('status').textContent = 'Status: Connection failed';
+            }
+            // 執行bridge
+            const cfg = {
+                encryption: true,
+                schuffleCheat: true,
+                playCheat: false,
+                hashChain: false,
+                autoPlay: false
+            };
+            console.log(p2pInterface.userIds)
+            let bridge = new Bridge(
+                p2pInterface, cfg
+            );
+            bridge.run();
+        }
+
+
+        document.querySelector('button[onclick="connect()"]').onclick = connect;
+
+
+    </script>
+
+
+</body>
+
+</html>

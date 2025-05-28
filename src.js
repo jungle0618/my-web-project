@@ -1,0 +1,1 @@
+const EC = elliptic.ec;
