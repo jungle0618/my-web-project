@@ -56,7 +56,7 @@ export class P2PWorker {
 
 
 export class P2PInterface {
-    constructor(peerNum = 4, isSignature = false, serverUrl = 'ws://140.112.30.186:8765') {
+    constructor(peerNum = 4, isSignature = false, serverUrl = 'wss://140.112.30.186:8765') {
         this.serverUrl = serverUrl;
         this.peerNum = peerNum;
         this.isSignature = isSignature;
