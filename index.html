@@ -308,6 +308,7 @@
         // 初始化连接
         async function connect() {
             const serverUrl = 'wss://140.112.30.186:8765';
+            const ws = new WebSocket('wss://140.112.30.186:8765')
             p2pInterface = new P2PInterface(4, true, serverUrl);
 
             // 加入狀態監聽器（在 init 前設定 onopen/onclose 是安全的）
