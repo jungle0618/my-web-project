@@ -158,7 +158,7 @@
 </head>
 
 <body>
-    <h1>P2P Web Client</h1>
+    <h1>online bridge</h1>
 
     <div id="status" class="disconnected">Status: Disconnected</div>
 
@@ -168,24 +168,24 @@
     <div id="gameInfo"></div>
 
     <div id="gameTable">
-        <div id="leftHand" class="hand-zone">LEFT HAND
+        <div id="leftHand" class="hand-zone">
             <!-- 這裡放多張卡片，JS用 left/top動態排放 -->
         </div>
 
         <div id="middle">
-            <div id="upHand" class="hand-zone">UP HAND</div>
+            <div id="upHand" class="hand-zone"></div>
 
             <div id="playedCards" class="card-zone">
-                <div id="leftCard">LEFT</div>
-                <div id="upCard">UP</div>
-                <div id="rightCard">RIGHT</div>
-                <div id="downCard">DOWN</div>
+                <div id="leftCard"></div>
+                <div id="upCard"></div>
+                <div id="rightCard"></div>
+                <div id="downCard"></div>
             </div>
 
-            <div id="downHand" class="hand-zone">DOWN HAND</div>
+            <div id="downHand" class="hand-zone"></div>
         </div>
 
-        <div id="rightHand" class="hand-zone">RIGHT HAND</div>
+        <div id="rightHand" class="hand-zone"></div>
     </div>
 
 
@@ -308,6 +308,7 @@
         // 初始化连接
         async function connect() {
             const serverUrl = 'wss://140.112.30.186:8765';
+            https//140.112.30.186:8765
             const ws = new WebSocket('wss://140.112.30.186:8765')
             p2pInterface = new P2PInterface(4, true, serverUrl);
 
