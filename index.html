@@ -291,7 +291,9 @@
             });
 
         }
-
+1.在瀏覽器輸入https://140.112.30.186:8765，然後造訪不安全頁面
+2.進去https://jungle0618.github.io/
+3.點connect
 
 
     </script>
@@ -307,8 +309,7 @@
 
         // 初始化连接
         async function connect() {
-            const serverUrl = 'wss://140.112.30.186:8765';
-            const ws = new WebSocket('wss://140.112.30.186:8765')
+            const serverUrl = 'wss://jungle.jdh8.org:8765';
             p2pInterface = new P2PInterface(4, true, serverUrl);
 
             // 加入狀態監聽器（在 init 前設定 onopen/onclose 是安全的）
