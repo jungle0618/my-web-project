@@ -433,12 +433,13 @@ export class Bridge {
                 console.log(_, this.roundNum, this.playPos, this.leadPos, this.oneRoundCards)
                 if (_ == 1 && this.roundNum == 0)
                     await dummyLaid()
-
+                    this.display()
                 if (this.Pos === this.playPos) {
                     await playOneCard()
                 } else {
                     await otherPlayOneCard()
                 }
+                this.display()
                 if (this.playPos == this.dummyPos && this.Pos != this.dummyPos) {
 
                     const lastCard = this.oneRoundCards[this.oneRoundCards.length - 1];
@@ -446,7 +447,7 @@ export class Bridge {
                     if (idx !== -1) {
                         this.dummyCards.splice(idx, 1);
                     }
-
+                    this.display()
                 }
                 if (this.isHashChain)
                     pass
