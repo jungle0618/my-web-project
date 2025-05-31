@@ -429,7 +429,6 @@ export class Bridge {
             this.playPos = this.leadPos
             this.oneRoundCards = []
             for (let _ = 0; _ < 4; _ = _ + 1) {
-                this.display()
                 console.log(_, this.roundNum, this.playPos, this.leadPos, this.oneRoundCards)
                 if (_ == 1 && this.roundNum == 0)
                     await dummyLaid()
@@ -455,7 +454,7 @@ export class Bridge {
                 this.playPos = (this.playPos + 1) % 4
             }
             this.display()
-            await waitForClick()
+            //await waitForClick()
             let winner = compare4Cards(this.oneRoundCards, this.trump, this.leadPos)
             this.leadPos = winner
             this.trick += (winner + this.Pos) % 2 == 0
