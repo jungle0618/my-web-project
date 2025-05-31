@@ -555,7 +555,7 @@ export class Bridge {
             }
             else {
                 let msg = await this.p2pInterface.recvMsg('play card')
-                card_val = msg["card_val"]
+                let card_val = msg["card_val"]
                 this.oneRoundCards.push(card_val);
             }
 
